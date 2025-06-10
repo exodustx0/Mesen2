@@ -1756,7 +1756,7 @@ uint8_t SnesPpu::Read(uint16_t addr)
 		case 0x2139: {
 			//VMDATALREAD - VRAM Data Read low byte
 			uint8_t returnValue = (uint8_t)_state.VramReadBuffer;
-			_emu->ProcessPpuRead<CpuType::Snes>(GetVramAddress(), returnValue, MemoryType::SnesVideoRam);
+			_emu->ProcessPpuRead<CpuType::Snes>(GetVramAddress() << 1, returnValue, MemoryType::SnesVideoRam);
 			if(!_state.VramAddrIncrementOnSecondReg) {
 				UpdateVramReadBuffer();
 				_state.VramAddress = (_state.VramAddress + _state.VramIncrementValue) & 0x7FFF;
@@ -1768,7 +1768,7 @@ uint8_t SnesPpu::Read(uint16_t addr)
 		case 0x213A: {
 			//VMDATAHREAD - VRAM Data Read high byte
 			uint8_t returnValue = (uint8_t)(_state.VramReadBuffer >> 8);
-			_emu->ProcessPpuRead<CpuType::Snes>(GetVramAddress() + 1, returnValue, MemoryType::SnesVideoRam);
+			_emu->ProcessPpuRead<CpuType::Snes>((GetVramAddress() << 1) + 1, returnValue, MemoryType::SnesVideoRam);
 			if(_state.VramAddrIncrementOnSecondReg) {
 				UpdateVramReadBuffer();
 				_state.VramAddress = (_state.VramAddress + _state.VramIncrementValue) & 0x7FFF;
