@@ -153,6 +153,8 @@ struct SnesPpuState : public BaseState
 	uint8_t VramAddressRemapping = 0;
 	bool VramAddrIncrementOnSecondReg = false;
 	uint16_t VramReadBuffer = 0;
+	uint16_t VramReadBufferAddress = 0;
+	bool VramReadBufferInitialized = false;
 
 	uint8_t Ppu1OpenBus = 0;
 	uint8_t Ppu2OpenBus = 0;

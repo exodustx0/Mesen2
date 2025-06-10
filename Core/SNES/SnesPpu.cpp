@@ -1692,7 +1692,13 @@ void SnesPpu::UpdateVramReadBuffer()
 {
 	//During rendering, this can't read the correct VRAM address
 	//Unknown: does it read from the address the ppu is currently reading from (like oam/cgram)?
-	_state.VramReadBuffer = CanAccessVram() ? _vram[GetVramAddress()] : 0;
+	if(CanAccessVram()) {
+		_state.VramReadBufferAddress = GetVramAddress();
+		_state.VramReadBuffer = _vram[_state.VramReadBufferAddress];
+		_state.VramReadBufferInitialized = true;
+	} else {
+		_state.VramReadBuffer = 0;
+	}
 }
 
 uint16_t SnesPpu::GetVramAddress()
@@ -1756,7 +1762,7 @@ uint8_t SnesPpu::Read(uint16_t addr)
 		case 0x2139: {
 			//VMDATALREAD - VRAM Data Read low byte
 			uint8_t returnValue = (uint8_t)_state.VramReadBuffer;
-			_emu->ProcessPpuRead<CpuType::Snes>(GetVramAddress() << 1, returnValue, MemoryType::SnesVideoRam);
+			if(_state.VramReadBufferInitialized) _emu->ProcessPpuRead<CpuType::Snes>(_state.VramReadBufferAddress << 1, returnValue, MemoryType::SnesVideoRam);
 			if(!_state.VramAddrIncrementOnSecondReg) {
 				UpdateVramReadBuffer();
 				_state.VramAddress = (_state.VramAddress + _state.VramIncrementValue) & 0x7FFF;
@@ -1768,7 +1774,7 @@ uint8_t SnesPpu::Read(uint16_t addr)
 		case 0x213A: {
 			//VMDATAHREAD - VRAM Data Read high byte
 			uint8_t returnValue = (uint8_t)(_state.VramReadBuffer >> 8);
-			_emu->ProcessPpuRead<CpuType::Snes>((GetVramAddress() << 1) + 1, returnValue, MemoryType::SnesVideoRam);
+			if(_state.VramReadBufferInitialized) _emu->ProcessPpuRead<CpuType::Snes>((_state.VramReadBufferAddress << 1) + 1, returnValue, MemoryType::SnesVideoRam);
 			if(_state.VramAddrIncrementOnSecondReg) {
 				UpdateVramReadBuffer();
 				_state.VramAddress = (_state.VramAddress + _state.VramIncrementValue) & 0x7FFF;
@@ -2254,7 +2260,7 @@ void SnesPpu::Serialize(Serializer &s)
 {
 	SV(_state.ForcedBlank); SV(_state.ScreenBrightness); SV(_scanline); SV(_frameCount);  SV(_state.BgMode);
 	SV(_state.Mode1Bg3Priority); SV(_state.MainScreenLayers); SV(_state.SubScreenLayers); SV(_state.VramAddress); SV(_state.VramIncrementValue); SV(_state.VramAddressRemapping);
-	SV(_state.VramAddrIncrementOnSecondReg); SV(_state.VramReadBuffer); SV(_state.Ppu1OpenBus); SV(_state.Ppu2OpenBus); SV(_state.CgramAddress); SV(_state.MosaicSize); SV(_state.MosaicEnabled);
+	SV(_state.VramAddrIncrementOnSecondReg); SV(_state.VramReadBuffer); SV(_state.VramReadBufferAddress); SV(_state.VramReadBufferInitialized); SV(_state.Ppu1OpenBus); SV(_state.Ppu2OpenBus); SV(_state.CgramAddress); SV(_state.MosaicSize); SV(_state.MosaicEnabled);
 	SV(_state.OamMode); SV(_state.OamBaseAddress); SV(_state.OamAddressOffset); SV(_state.OamRamAddress); SV(_state.EnableOamPriority);
 	SV(_oamWriteBuffer); SV(_timeOver); SV(_rangeOver); SV(_state.HiResMode); SV(_state.ScreenInterlace); SV(_state.ObjInterlace);
 	SV(_state.OverscanMode); SV(_state.DirectColorMode); SV(_state.ColorMathClipMode); SV(_state.ColorMathPreventMode); SV(_state.ColorMathAddSubscreen); SV(_state.ColorMathEnabled);
